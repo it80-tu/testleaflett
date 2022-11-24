@@ -533,6 +533,7 @@ const jsonQuery = {
 
   let Arr = [];
 
+      
 const fetchData = async () => {
     const url = "https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:kunta4500k&outputFormat=json&srsName=EPSG:4326"
     const res = await fetch(url)
@@ -599,4 +600,3 @@ const initMap = (data) => {
 
 fetchData();
 fetchDataVotes();
-
