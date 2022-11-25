@@ -532,15 +532,16 @@ const jsonQuery = {
   }
 
   let Arr = [];
-
+  let rawData = {};
       
 const fetchData = async () => {
     const url = "https://geo.stat.fi/geoserver/wfs?service=WFS&version=2.0.0&request=GetFeature&typeName=tilastointialueet:kunta4500k&outputFormat=json&srsName=EPSG:4326"
     const res = await fetch(url)
     const geoData = await res.json();
-
     initMap(geoData);
 };
+
+
 
 const fetchDataVotes = () => {
         fetch ('https://statfin.stat.fi:443/PxWeb/api/v1/en/StatFin/kvaa/statfin_kvaa_pxt_12g3.px',
@@ -550,9 +551,28 @@ const fetchDataVotes = () => {
         body: JSON.stringify(jsonQuery)
     })
     .then (res => res.json())
-    .then (data => {
-        console.log(data)
+    .then (data => { 
+        const rawDataCity = {}; 
+        console.log(rawData) 
+        console.log(data) 
+        const objSortedByKeys = Object.fromEntries(Object.entries(data['dimension']['Alue']['category']['label']).sort((a,b)=>a[0].localeCompare(b[0]))); 
+        for (const year in data['dimension']['Vuosi']['category']['label']) { 
+            numOfCity = 1
+            Object.keys(objSortedByKeys).forEach(city => { 
+              
+                tmpArr = []; 
+                for (let i = 5*numOfCity - 5; i < 5*numOfCity; i++){ 
+                    tmpArr.push(data['value'][i]); 
+                } 
+                let maxValue = data.dimension.Puolue.category.label['0'+(tmpArr.indexOf(Math.max.apply(null,tmpArr))+1)];
+                rawDataCity[data['dimension']['Alue']['category']['label'][city]] = maxValue;
+                numOfCity += 1;
+            })  
+            rawData[year] = rawDataCity 
+        } 
+        console.log(rawData)
     });
+    fetchData();
 };
 
 const initMap = (data) => {
@@ -560,13 +580,14 @@ const initMap = (data) => {
         minZoom: -3
     })
 
-    let col = '#723532'
+    let col = 'green'
     let geoJson = L.geoJSON(data, {
         onEachFeature: function (feature, layer) {
             // console.log(feature)
         },
         style: function (feature) {
-            // console.log(feature.properties.name)
+            // console.log(feature.properties)
+            Object.keys(rawData['1976']).forEach((kunta) => parseFloat(kunta)===feature.properties.kunta ? col='red': col='blue');
             return {color: col};
         }
     }).addTo(map)
@@ -598,5 +619,4 @@ const initMap = (data) => {
 
 }
 
-fetchData();
 fetchDataVotes();
